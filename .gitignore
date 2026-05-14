@@ -1,0 +1,38 @@
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example 
+
+# Google credentials / secrets
+config/
+encoded_credentials.txt
+encoded_token.txt
+
+# Python cache / build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Virtual environments
+.venv/
+env/
+
+# Generated data / results
+notion_calendar.ics
+data/processed/*
+results/*
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE / system files
+.vscode/
+.idea/
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
