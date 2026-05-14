@@ -26,8 +26,12 @@ venv/
 
 # Generated data / results
 notion_calendar.ics
+data/raw/*
+!data/raw/.gitkeep
 data/processed/*
+!data/processed/.gitkeep
 results/*
+!results/.gitkeep
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/

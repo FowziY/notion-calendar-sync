@@ -1,0 +1,39 @@
+name: Update Notion Calendar and Upload to Drive
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */3 * * *"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create Google credentials files
+        run: |
+          mkdir -p config
+          echo "${{ secrets.GOOGLE_CREDENTIALS_B64 }}" | base64 --decode > config/credentials.json
+          echo "${{ secrets.GOOGLE_TOKEN_B64 }}" | base64 --decode > config/mycreds.json
+
+      - name: Generate ICS file
+        run: PYTHONPATH=src python -m notion_sync.notion_to_ics
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+
+      - name: Upload to Google Drive
+        run: PYTHONPATH=src python -m notion_sync.upload_to_gdrive
+        env:
+          MAKE_GDRIVE_FILE_PUBLIC: "true"
