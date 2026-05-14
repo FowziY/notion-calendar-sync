@@ -7,6 +7,8 @@ This project converts tasks from a Notion database into an `.ics` calendar file 
 - Fetch tasks from a Notion database
 - Generate a standard `.ics` calendar file
 - Skip completed tasks automatically
+- Support paginated Notion databases (100+ tasks)
+- Optionally upload the generated `.ics` file to Google Drive
 
 ## Requirements
 
@@ -47,14 +49,44 @@ pip install -r requirements.txt
 
 ## Run
 
+Generate the calendar file:
+
 ```bash
-python notion_to_ics.py
+python src/notion_to_ics.py
 ```
 
 After running, the script generates:
 
 ```text
-notion_calendar.ics
+data/processed/notion_calendar.ics
+```
+
+## Optional Google Drive Upload
+
+This project includes an optional script for uploading or updating the generated `.ics` file on Google Drive.
+
+Before using it, place your Google OAuth credentials file at:
+
+```text
+config/credentials.json
+```
+
+You can create OAuth credentials from the Google Cloud Console. A safe template can be provided as:
+
+```text
+config/credentials.example.json
+```
+
+Then run:
+
+```bash
+python src/upload_to_gdrive.py
+```
+
+The script expects the generated calendar file at:
+
+```text
+data/processed/notion_calendar.ics
 ```
 
 ## Expected Notion Properties
@@ -76,4 +108,7 @@ The following files are generated locally and are ignored by Git:
 ```text
 .env
 notion_calendar.ics
+config/credentials.json
+config/mycreds.json
+data/processed/notion_calendar.ics
 ```
