@@ -1,4 +1,4 @@
-name: Update Notion Calendar and Upload to Drive
+name: Sync Notion Tasks to Google Calendar
 
 on:
   workflow_dispatch:
@@ -8,6 +8,8 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
@@ -21,19 +23,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Run unit tests
+        run: PYTHONPATH=src python -m unittest discover -s tests -v
+
       - name: Create Google credentials files
         run: |
           mkdir -p config
-          echo "${{ secrets.GOOGLE_CREDENTIALS_B64 }}" | base64 --decode > config/credentials.json
           echo "${{ secrets.GOOGLE_TOKEN_B64 }}" | base64 --decode > config/mycreds.json
 
-      - name: Generate ICS file
-        run: PYTHONPATH=src python -m notion_sync.notion_to_ics
+      - name: Sync private Google Calendar
+        run: PYTHONPATH=src python -m notion_sync.google_calendar_sync
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-
-      - name: Upload to Google Drive
-        run: PYTHONPATH=src python -m notion_sync.upload_to_gdrive
-        env:
-          MAKE_GDRIVE_FILE_PUBLIC: "true"
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
