@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 
 import requests
 from dotenv import load_dotenv
@@ -13,6 +14,14 @@ DATABASE_ID = os.getenv("DATABASE_ID")
 OUTPUT_FILE = "data/processed/notion_calendar.ics"
 NOTION_VERSION = "2022-06-28"
 NOTION_API_URL = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
+REQUEST_TIMEOUT = 30
+COMPLETED_STATUSES = {
+    status.strip().lower()
+    for status in os.getenv(
+        "NOTION_COMPLETED_STATUSES", "Done,Completed,Cancelled,Archived"
+    ).split(",")
+    if status.strip()
+}
 
 HEADERS = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
@@ -40,6 +49,7 @@ def get_notion_tasks():
             NOTION_API_URL,
             headers=HEADERS,
             json=payload,
+            timeout=REQUEST_TIMEOUT,
         )
         response.raise_for_status()
 
@@ -69,23 +79,21 @@ def extract_event_data(item):
         return None
 
     # Get task status
-    status = (
-        properties.get("Status", {})
-        .get("select", {})
-        .get(
-            "name",
-            "Unknown",
-        )
-    )
+    status_property = properties.get("Status", {})
+    status_value = status_property.get("status") or status_property.get("select") or {}
+    status = status_value.get("name", "Unknown")
 
     # Skip completed tasks
-    if status.lower() == "done":
+    if status.lower() in COMPLETED_STATUSES:
         return None
 
     return {
+        "notion_page_id": item.get("id"),
         "title": title,
-        "date": due_date["start"],
+        "start": due_date["start"],
+        "end": due_date.get("end"),
         "status": status,
+        "url": item.get("url"),
     }
 
 
@@ -96,7 +104,13 @@ def build_calendar(events):
     for ev in events:
         event = Event()
         event.name = f"{ev['title']} ({ev['status']})"
-        event.begin = ev["date"]
+        event.begin = ev["start"]
+        if ev.get("end"):
+            event.end = ev["end"]
+        elif "T" not in ev["start"]:
+            event.end = (
+                datetime.fromisoformat(ev["start"]).date() + timedelta(days=1)
+            ).isoformat()
         calendar.events.add(event)
 
     return calendar

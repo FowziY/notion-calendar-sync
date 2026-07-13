@@ -4,15 +4,15 @@ import os
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 
-# Path to the OAuth client credentials downloaded
+# Path to the Google OAuth client credentials downloaded
 # from the Google Cloud Console
 CREDENTIALS_PATH = "config/credentials.json"
 
 # Path where the generated refresh/access token will be stored
 TOKEN_PATH = "config/mycreds.json"
 
-# Google Drive API scope
-SCOPES = ["https://www.googleapis.com/auth/drive"]
+# Google Calendar API scope
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 # Ensure the OAuth credentials file exists before starting
@@ -43,7 +43,7 @@ def main():
 
     # Save token information in a reusable JSON format
     token_data = {
-        "access_token": credentials.token,
+        "token": credentials.token,
         "refresh_token": credentials.refresh_token,
         "token_uri": credentials.token_uri,
         "client_id": credentials.client_id,
@@ -58,7 +58,7 @@ def main():
     print(f"Saved token to {TOKEN_PATH}")
 
     # Confirm refresh token generation
-    # Refresh tokens are required for unattended GitHub Actions uploads
+    # Refresh tokens are required for unattended GitHub Actions syncs
     if credentials.refresh_token:
         print("Refresh token generated successfully.")
     else:
