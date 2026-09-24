@@ -2,12 +2,11 @@ import json
 import os
 from datetime import date, datetime, timedelta
 
-from notion_sync.notion_to_ics import (
+from notion_sync.notion import (
     extract_event_data,
     get_notion_tasks,
     validate_environment,
 )
-
 
 TOKEN_PATH = "config/mycreds.json"
 CALENDAR_SCOPE = "https://www.googleapis.com/auth/calendar"
@@ -69,7 +68,9 @@ def _event_times(event):
         if end_value
         else start_datetime + timedelta(hours=1)
     )
-    return {"dateTime": start_datetime.isoformat()}, {"dateTime": end_datetime.isoformat()}
+    return {"dateTime": start_datetime.isoformat()}, {
+        "dateTime": end_datetime.isoformat()
+    }
 
 
 def build_google_event(event):
@@ -85,6 +86,7 @@ def build_google_event(event):
         "end": end,
         "extendedProperties": {
             "private": {
+                # Marks events owned by this sync so unrelated calendar events are untouched.
                 "syncSource": SYNC_MARKER,
                 "notionPageId": event["notion_page_id"],
             }
@@ -141,6 +143,12 @@ def sync_events(service, calendar_id, notion_events):
         else:
             service.events().insert(calendarId=calendar_id, body=body).execute()
             created += 1
+
+    # Avoid wiping the calendar if the Notion source unexpectedly returns no active tasks.
+    if existing and not active_ids:
+        raise RuntimeError(
+            "Refusing to delete all synced events because no active Notion tasks were found."
+        )
 
     for notion_id, current in existing.items():
         if notion_id not in active_ids:

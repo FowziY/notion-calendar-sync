@@ -1,7 +1,0 @@
-ics
-python-dotenv
-requests
-google-api-python-client
-google-auth
-google-auth-oauthlib
-cryptography<46
