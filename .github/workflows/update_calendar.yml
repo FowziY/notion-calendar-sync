@@ -21,18 +21,19 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install .
 
       - name: Run unit tests
-        run: PYTHONPATH=src python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -v
 
       - name: Create Google credentials files
         run: |
+          umask 077
           mkdir -p config
-          echo "${{ secrets.GOOGLE_TOKEN_B64 }}" | base64 --decode > config/mycreds.json
+          printf '%s' "${{ secrets.GOOGLE_TOKEN_B64 }}" | base64 --decode > config/mycreds.json
 
       - name: Sync private Google Calendar
-        run: PYTHONPATH=src python -m notion_sync.google_calendar_sync
+        run: python -m notion_sync.google_calendar_sync
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
